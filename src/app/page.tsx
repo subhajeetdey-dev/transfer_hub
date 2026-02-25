@@ -3,8 +3,30 @@
 import { socket } from "@/lib/socketClient";
 import { useEffect, useState } from "react";
 
+type FileType = {
+  name: string;
+  path: string;
+}
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<FileType[]>([]);
+
+  useEffect(() => {
+    socket.on("File-list", (data) => {
+      setFiles(data);
+    });
+
+    socket.on("New-file", (file) => {
+      setFiles((prev) => [...prev, file]);
+    });
+
+    return () => {
+      socket.off("File-list");
+      socket.off("New-file");
+    };
+  }, []);
+
 
   const handleUpload = async () => {
     if (!file) return;
@@ -16,8 +38,6 @@ export default function Home() {
       method: "POST",
       body: formData,
     });
-
-    alert("File Uploaded Successfully");
   };
 
   return (
@@ -36,6 +56,14 @@ export default function Home() {
       >
         Upload
       </button>
+      <div className="mt-10">
+        <h2 className="text-xl font-bold mb-3">Available Files</h2>
+        {files.map((f, i) => (
+          <div key={i} className="border p-2 mb-2 rounded">
+            {f.name}
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
