@@ -32,12 +32,15 @@ export default function Home() {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("File", file);
+    formData.append("file", file);
 
-    await fetch("/api/upload", {
+    const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
+
+    const fileData = await res.json();
+    socket.emit("New-file", fileData);
   };
 
   return (
@@ -60,7 +63,8 @@ export default function Home() {
         <h2 className="text-xl font-bold mb-3">Available Files</h2>
         {files.map((f, i) => (
           <div key={i} className="border p-2 mb-2 rounded">
-            {f.name}
+            <span className="m-2">{f.name}</span>
+            <a href={`/uploads/${f.path}`} download className="px-3 py-1 bg-green-500 text-white rounded">Download</a>
           </div>
         ))}
       </div>

@@ -1,4 +1,3 @@
-import { socket } from "@/lib/socketClient";
 import { createServer } from "http";
 import next from "next";
 import {Server} from "socket.io";
@@ -21,7 +20,12 @@ app.prepare().then(()=> {
     io.on("connection", (socket) => {
         console.log('Device Connected Successfully', socket.id);
 
-        socket.emit("files", files);
+        socket.emit("files-list", files);
+
+        socket.on("New-file", (fileData) => {
+            files.push(fileData);
+            io.emit("New-file", fileData);
+        });
 
         socket.on("disconnect", ()=> {
             console.log('Device Disconnected', socket.id);

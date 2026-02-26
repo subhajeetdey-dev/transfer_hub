@@ -1,46 +1,37 @@
-import { NextResponse } from "next/server";
-import formidable from "formidable";
 import fs from "fs";
+import { globalAgent } from "http";
+import { Buda } from "next/font/google";
 import path from "path";
-import { rejects } from "assert";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    console.log([...formData.entries()]);
+    const file = formData.get("file") as File;
 
-export async function POST(req: NextResponse) {
-  const uploadDir = path.join(process.cwd(), "public/uploads");
+    if (!file) {
+      return new Response("No file found", { status: 400 });
+    }
 
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const uploadDir = path.join(process.cwd(), "public/uploads");
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, file.name);
+    fs.writeFileSync(filePath, buffer);
+
+    const fileData = {
+      name: file.name,
+      path: file.name,
+    };
+    return Response.json(fileData);
+  } catch (err) {
+    console.log(`Upload Error`,err);
+    return new Response("Upload failed", { status: 500 });
   }
-
-  const form = formidable({
-    uploadDir,
-    keepExtensions: true,
-  });
-
-  return new Promise((resolve, reject) => {
-    form.parse(req as any, (err, fileds, files) => {
-      if (err) {
-        reject(new Response("Upload Failed", { status: 500 }));
-        return;
-      }
-
-      const uploadedFile = Object.values(files)[0] as any;
-
-      const fileData = {
-        name: uploadedFile.originalFilename,
-        path: uploadedFile.newFilename,
-      };
-
-      (global as any).files.push(fileData);
-
-      (global as any).io.emit("New-file", fileData);
-
-      resolve(new Response(JSON.stringify(fileData), { status: 200 }));
-    });
-  });
 }
