@@ -16,11 +16,17 @@ app.prepare().then(()=> {
     });
 
     let files: any[] = [];
+    let devices: string[] = [];
 
     io.on("connection", (socket) => {
         console.log('Device Connected Successfully', socket.id);
 
+        devices.push(socket.id);
+
         socket.emit("files-list", files);
+        socket.emit("Devices", devices);
+
+        io.emit("Devices", devices);
 
         socket.on("New-file", (fileData) => {
             files.push(fileData);
@@ -29,6 +35,8 @@ app.prepare().then(()=> {
 
         socket.on("disconnect", ()=> {
             console.log('Device Disconnected', socket.id);
+            devices = devices.filter((id) => id!== socket.id);
+            io.emit("Devices", devices);
         });
     });
     

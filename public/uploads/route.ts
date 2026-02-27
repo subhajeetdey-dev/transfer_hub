@@ -20,7 +20,7 @@ export async function POST(req:NextResponse) {
 
     const form = formidable ({
         uploadDir,
-        keepExtenstions: true,
+        keepExtensions: true,
     });
 
     return new Promise((resolve, reject) => {
