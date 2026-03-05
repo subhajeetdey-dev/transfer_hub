@@ -1,6 +1,4 @@
 import fs from "fs";
-import { globalAgent } from "http";
-import { Buda } from "next/font/google";
 import path from "path";
 
 export async function POST(req: Request) {
@@ -10,7 +8,7 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return new Response("No file found", { status: 400 });
+      return new Response("no file found", { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -31,7 +29,7 @@ export async function POST(req: Request) {
     };
     return Response.json(fileData);
   } catch (err) {
-    console.log(`Upload Error`,err);
-    return new Response("Upload failed", { status: 500 });
+    console.log(`upload-error`,err);
+    return new Response("upload-failed", { status: 500 });
   }
 }

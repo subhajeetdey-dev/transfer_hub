@@ -12,6 +12,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<FileType[]>([]);
   const [devices, setDevices] = useState<string[]>([]);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     socket.on("File-list", (data) => {
@@ -26,13 +27,18 @@ export default function Home() {
       setDevices(list);
     });
 
+    socket.on("File-removed", (fileName: String) => {
+      setFiles((prev) => prev.filter((f) => f.path !== fileName));
+    });
+
     return () => {
       socket.off("File-list");
       socket.off("New-file");
+      socket.off("File-removed");
     };
   }, []);
 
-  const handleUpload = async () => {
+  const handleUploadFile = async (selectedFile: File) => {
     if (!file) return;
 
     const formData = new FormData();
@@ -47,6 +53,16 @@ export default function Home() {
     socket.emit("New-file", fileData);
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      handleUploadFile(droppedFile);
+    }
+  };
+
   return (
     <main className="flex flex-col items-center justify-center gap-2 min-h-screen">
       <h1 className="text-4xl font-bold ">Trasnfer Hub</h1>
@@ -58,17 +74,41 @@ export default function Home() {
         Connected Devices: {devices.length}
       </div>
 
-      <input
-        type="file"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-        className="border cursor-pointer bg-gray-600 px-3 py-2 rounded-2xl"
-      />
+      {/* drag and drop */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        className={`border bg-red-700 ${dragging ? "bg-blue-100 border-blue-500" : "border-gray-400"}`}
+      >
+        <p className="text-lg">
+          {dragging
+            ? "Drop File Here"
+            : "Drag & Drop File here or click to upload"}
+        </p>
+
+        <input
+          id="fileInput"
+          type="file"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          className="border cursor-pointer bg-gray-600 px-3 py-2 rounded-2xl"
+        />
+        <label htmlFor="fileInput" className="">
+          Browse File
+        </label>
+      </div>
+
       <button
-        onClick={handleUpload}
+        onClick={handleUploadFile}
         className="bg-purple-800 px-4 py-2 border rounded-2xl cursor-pointer"
       >
         Upload
       </button>
+
+
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-3">Available Files</h2>
         {files.map((f, i) => (
@@ -76,8 +116,8 @@ export default function Home() {
             <div>
               <span className="m-2">{f.name}</span>
               <a
-                href={`/uploads/${f.path}`}
-                download
+                href={`/api/download?file=${f.path}`}
+                onClick={() => socket.emit("File-downloaded", f.path)}
                 className="px-3 py-1 bg-green-500 text-white rounded"
               >
                 Download

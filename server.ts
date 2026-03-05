@@ -24,20 +24,25 @@ app.prepare().then(()=> {
         devices.push(socket.id);
 
         socket.emit("files-list", files);
-        socket.emit("Devices", devices);
+        socket.emit("devices", devices);
 
-        io.emit("Devices", devices);
+        io.emit("devices", devices);
 
-        socket.on("New-file", (fileData) => {
+        socket.on("new-file", (fileData) => {
             files.push(fileData);
-            io.emit("New-file", fileData);
+            io.emit("new-file", fileData);
         });
 
         socket.on("disconnect", ()=> {
             console.log('Device Disconnected', socket.id);
             devices = devices.filter((id) => id!== socket.id);
-            io.emit("Devices", devices);
+            io.emit("devices", devices);
         });
+
+        socket.on("file-downloaded", (fileName) => {
+            files = files.filter((f) => f.path !== fileName);
+            io.emit("file-removed", fileName)
+        })
     });
     
     (global as any).io = io;
