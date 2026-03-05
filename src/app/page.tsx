@@ -15,34 +15,42 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    socket.on("File-list", (data) => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    socket.on("connect", () => {
+      console.log("Connected to socket", socket.id);
+    });
+
+    socket.on("files-list", (data) => {
       setFiles(data);
     });
 
-    socket.on("New-file", (file) => {
+    socket.on("new-file", (file) => {
       setFiles((prev) => [...prev, file]);
     });
 
-    socket.on("Devics", (list) => {
+    socket.on("devices", (list) => {
       setDevices(list);
     });
 
-    socket.on("File-removed", (fileName: String) => {
+    socket.on("file-removed", (fileName: String) => {
+      console.log("Removing file:", fileName);
       setFiles((prev) => prev.filter((f) => f.path !== fileName));
     });
 
     return () => {
-      socket.off("File-list");
-      socket.off("New-file");
-      socket.off("File-removed");
+      socket.off("files-list");
+      socket.off("new-file");
+      socket.off("devices");
+      socket.off("file-removed");
     };
   }, []);
 
   const handleUploadFile = async (selectedFile: File) => {
-    if (!file) return;
-
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", selectedFile);
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -50,7 +58,7 @@ export default function Home() {
     });
 
     const fileData = await res.json();
-    socket.emit("New-file", fileData);
+    socket.emit("new-file", fileData);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -59,7 +67,7 @@ export default function Home() {
 
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
-      handleUploadFile(droppedFile);
+      setFile(droppedFile);
     }
   };
 
@@ -93,7 +101,10 @@ export default function Home() {
         <input
           id="fileInput"
           type="file"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) => {
+            const selected = e.target.files?.[0];
+            if (selected) setFile(selected);
+          }}
           className="border cursor-pointer bg-gray-600 px-3 py-2 rounded-2xl"
         />
         <label htmlFor="fileInput" className="">
@@ -102,12 +113,17 @@ export default function Home() {
       </div>
 
       <button
-        onClick={handleUploadFile}
+        onClick={() => {
+          if (file) handleUploadFile(file);
+        }}
         className="bg-purple-800 px-4 py-2 border rounded-2xl cursor-pointer"
       >
         Upload
       </button>
 
+      {file && (
+        <p className="text-sm mt-2 text-gray-300">Selected file: {file.name}</p>
+      )}
 
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-3">Available Files</h2>
@@ -117,7 +133,11 @@ export default function Home() {
               <span className="m-2">{f.name}</span>
               <a
                 href={`/api/download?file=${f.path}`}
-                onClick={() => socket.emit("File-downloaded", f.path)}
+                onClick={() => {
+                  setTimeout(() => {
+                    socket.emit("file-downloaded", f.path);
+                  }, 500);
+                }}
                 className="px-3 py-1 bg-green-500 text-white rounded"
               >
                 Download
@@ -125,7 +145,7 @@ export default function Home() {
             </div>
             <input
               className="mt-2 w-full border p-1 text-sm"
-              value={`${window.location.origin}/uploads/${f.path}`}
+              value={`${typeof window !== "undefined" ? window.location.origin : ""}/uploads/${f.path}`}
               readOnly
             />
           </div>

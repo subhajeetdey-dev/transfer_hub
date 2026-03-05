@@ -15,17 +15,17 @@ app.prepare().then(()=> {
         cors: {origin: "*"},
     });
 
-    let files: any[] = [];
+    let files: { name: string; path: string }[] = [];
     let devices: string[] = [];
 
     io.on("connection", (socket) => {
         console.log('Device Connected Successfully', socket.id);
 
-        devices.push(socket.id);
+        if(!devices.includes(socket.id)){
+            devices.push(socket.id);
+        }
 
         socket.emit("files-list", files);
-        socket.emit("devices", devices);
-
         io.emit("devices", devices);
 
         socket.on("new-file", (fileData) => {
@@ -33,16 +33,16 @@ app.prepare().then(()=> {
             io.emit("new-file", fileData);
         });
 
+        socket.on("file-downloaded", (fileName) => {
+            files = files.filter((f) => f.path !== fileName);
+            io.emit("file-removed", fileName);
+        })
+
         socket.on("disconnect", ()=> {
-            console.log('Device Disconnected', socket.id);
             devices = devices.filter((id) => id!== socket.id);
             io.emit("devices", devices);
         });
 
-        socket.on("file-downloaded", (fileName) => {
-            files = files.filter((f) => f.path !== fileName);
-            io.emit("file-removed", fileName)
-        })
     });
     
     (global as any).io = io;
