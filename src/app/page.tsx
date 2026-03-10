@@ -3,11 +3,7 @@
 import { socket } from "@/lib/socketClient";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-
-type FileType = {
-  name: string;
-  path: string;
-};
+import { FileType } from "@/types/file";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
