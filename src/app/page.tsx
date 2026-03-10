@@ -96,7 +96,6 @@ export default function Home() {
             size={160}
           />
         )}
-        <p>{url}</p>
         <p className="text-sm text-gray-400">
           Scan this QR from another device on the same wifi
         </p>
