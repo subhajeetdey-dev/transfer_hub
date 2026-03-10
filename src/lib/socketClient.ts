@@ -9,3 +9,6 @@ if(typeof window !== "undefined"){
         reconnection: true,
     })
 }
+
+
+export { socket };
