@@ -2,6 +2,7 @@
 
 import { socket } from "@/lib/socketClient";
 import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 type FileType = {
   name: string;
@@ -13,12 +14,17 @@ export default function Home() {
   const [files, setFiles] = useState<FileType[]>([]);
   const [devices, setDevices] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [url, setUrl] = useState("");
 
   useEffect(() => {
     if (!socket.connected) {
       socket.connect();
     }
-
+    
+    if (typeof window !== "undefined") {
+    setUrl(window.location.origin);
+  }
+  
     socket.on("connect", () => {
       console.log("Connected to socket", socket.id);
     });
@@ -80,6 +86,20 @@ export default function Home() {
 
       <div className="mb-4 p-3 rounded-xl bg-gray-100 text-black font-semibold">
         Connected Devices: {devices.length}
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-2">
+        <h3 className="text-lg font-semibold">Scan to Connect</h3>
+        {url && (
+          <QRCodeSVG
+            value={url}
+            size={160}
+          />
+        )}
+        <p>{url}</p>
+        <p className="text-sm text-gray-400">
+          Scan this QR from another device on the same wifi
+        </p>
       </div>
 
       {/* drag and drop */}
