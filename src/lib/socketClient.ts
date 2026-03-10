@@ -1,14 +1,5 @@
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
-let socket: Socket;
-
-if(typeof window !== "undefined"){
-    socket = io(window.location.origin, {
-        transports: ["websocket"],
-        autoConnect: false,
-        reconnection: true,
-    })
-}
-
-
-export { socket };
+export const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", {
+  transports: ["websocket"],
+});
