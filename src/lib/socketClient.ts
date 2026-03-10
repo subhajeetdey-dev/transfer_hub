@@ -1,7 +1,11 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-export const socket = io(window.location.origin, {
-  transports: ["websocket"],
-  autoConnect: false,
-  reconnection: true,
-});
+let socket: Socket;
+
+if(typeof window !== "undefined"){
+    socket = io(window.location.origin, {
+        transports: ["websocket"],
+        autoConnect: false,
+        reconnection: true,
+    })
+}
