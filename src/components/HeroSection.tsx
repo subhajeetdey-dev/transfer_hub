@@ -2,7 +2,7 @@ import { FEATURE_PILLS } from "@/lib/utils";
 
 export default function HeroSection() {
   return (
-    <section className="w-full py-16 grid grid-cols-2 md:grid-cols-2 gap-112 items-start">
+    <section className="w-full py-16 grid md:grid-cols-2 gap-112 items-start">
       {/* Left side */}
       <div className="flex flex-col">
         <h1 className="font-serif font-light leading-tight tracking-tight text-5xl lg:text-7xl text-ink dark:text-paper">

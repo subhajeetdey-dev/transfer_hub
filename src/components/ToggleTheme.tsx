@@ -21,7 +21,7 @@ export default function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.2; transform: scale(0.5); }
         }
-        @keyframes cloud-drift {
+        @keyframes cloud-transfer-hub {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(2px); }
         }
@@ -86,7 +86,7 @@ export default function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
           position: "absolute", right: 10, top: 7,
           opacity: isDark ? 0 : 1,
           transition: "opacity 0.3s ease",
-          animation: "cloud-drift 4s ease-in-out infinite",
+          animation: "cloud-transfer-hub 4s ease-in-out infinite",
         }}>
           <div style={{ position: "relative", width: 20, height: 10 }}>
             <div style={{
