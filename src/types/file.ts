@@ -1,4 +1,5 @@
 export type FileType = {
-    name: String,
-    path: String,
+    name: string,
+    path: string,
+    size?: number,
 };

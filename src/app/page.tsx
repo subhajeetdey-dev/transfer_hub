@@ -1,40 +1,58 @@
 "use client";
 
 import { socket } from "@/lib/socketClient";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { FileType } from "@/types/file";
 
 import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
+import DropArea from "@/components/DropArea";
 import Footer from "@/components/Footer";
+import { randomId } from "@/lib/utils";
 
 export default function Home() {
-
   const [isDark, setIsDark] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<FileType[]>([]);
+  const [file, setFile] = useState<File | null>(null);
   const [devices, setDevices] = useState<string[]>([]);
-  const [dragging, setDragging] = useState(false);
   const [url, setUrl] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done">(
+    "idle",
+  );
+  const [activeFile, setActiveFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [uploadedPath, setUploadedPath] = useState("");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if(isDark){
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [isDark]);
 
   useEffect(() => {
     if (!socket.connected) {
       socket.connect();
     }
-    
+
     if (typeof window !== "undefined") {
-    setUrl(window.location.origin);
-  }
-  
+      setUrl(window.location.origin);
+    }
+
     socket.on("connect", () => {
       console.log("Connected to socket", socket.id);
     });
 
-    socket.on("files-list", (data) => {
+    socket.on("files-list", (data: FileType[]) => {
       setFiles(data);
     });
 
-    socket.on("new-file", (file) => {
+    socket.on("new-file", (file: FileType) => {
       setFiles((prev) => [...prev, file]);
     });
 
@@ -56,128 +74,87 @@ export default function Home() {
   }, []);
 
   const handleUploadFile = async (selectedFile: File) => {
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+    setActiveFile(selectedFile);
+    setUploadState("uploading");
+    setProgress(0);
+    setElapsed(0);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    let t = 0;
+    const ticker = setInterval(() => {
+      t++;
+      setElapsed(t);
+      setProgress((p) => {
+        if (p >= 90) {
+          clearInterval(ticker);
+          return 90;
+        }
+        return p + Math.random() * 12 + 4;
+      });
+    }, 150);
 
-    const fileData = await res.json();
-    socket.emit("new-file", fileData);
-  };
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragging(false);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      setFile(droppedFile);
+      const fileData: FileType = await res.json();
+      clearInterval(ticker);
+      setProgress(100);
+      setUploadedPath(fileData.path);
+      socket.emit("new-file", fileData);
+
+      setTimeout(() => setUploadState("done"), 300);
+    } catch (err) {
+      clearInterval(ticker);
+      console.error("Upload failed", err);
+      setUploadState("idle");
     }
   };
 
-  // return (
-  //   <main className="flex flex-col items-center justify-center gap-2 min-h-screen">
-  //     <h1 className="text-4xl font-bold ">Trasnfer Hub</h1>
-  //     <h3 className="text-2xl font-semibold">
-  //       Hello, you are now connected to our local file sharing system
-  //     </h3>
+  const handleCopy = () => {
+    const downloadUrl = `${url}/api/download?file=${uploadedPath}`;
+    navigator.clipboard.writeText(downloadUrl).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-  //     <div className="mb-4 p-3 rounded-xl bg-gray-100 text-black font-semibold">
-  //       Connected Devices: {devices.length}
-  //     </div>
+  const handleReset = () => {
+    setUploadState("idle");
+    setActiveFile(null);
+    setProgress(0);
+    setElapsed(0);
+    setCopied(false);
+    setUploadedPath("");
+  };
 
-  //     <div className="mt-6 flex flex-col items-center gap-2">
-  //       <h3 className="text-lg font-semibold">Scan to Connect</h3>
-  //       {url && (
-  //         <QRCodeSVG
-  //           value={url}
-  //           size={160}
-  //         />
-  //       )}
-  //       <p className="text-sm text-gray-400">
-  //         Scan this QR from another device on the same wifi
-  //       </p>
-  //     </div>
+  return (
+    <div className="grain ruled relative min-h-screen bg-paper dark:bg-ink flex flex-col items-center px-10 transition-colors duration-300">
+      <Header isDark={isDark} onToggleTheme={() => setIsDark((d) => !d)} />
 
-  //     {/* drag and drop */}
-  //     <div
-  //       onDragOver={(e) => {
-  //         e.preventDefault();
-  //         setDragging(true);
-  //       }}
-  //       onDragLeave={() => setDragging(false)}
-  //       onDrop={handleDrop}
-  //       className={`border bg-red-700 ${dragging ? "bg-blue-100 border-blue-500" : "border-gray-400"}`}
-  //     >
-  //       <p className="text-lg">
-  //         {dragging
-  //           ? "Drop File Here"
-  //           : "Drag & Drop File here or click to upload"}
-  //       </p>
+      <div className="flex flex-col justify-between items-center">
+        <HeroSection />
+      </div>
 
-  //       <input
-  //         id="fileInput"
-  //         type="file"
-  //         onChange={(e) => {
-  //           const selected = e.target.files?.[0];
-  //           if (selected) setFile(selected);
-  //         }}
-  //         className="border cursor-pointer bg-gray-600 px-3 py-2 rounded-2xl"
-  //       />
-  //       <label htmlFor="fileInput" className="">
-  //         Browse File
-  //       </label>
-  //     </div>
-
-  //     <button
-  //       onClick={() => {
-  //         if (file) handleUploadFile(file);
-  //       }}
-  //       className="bg-purple-800 px-4 py-2 border rounded-2xl cursor-pointer"
-  //     >
-  //       Upload
-  //     </button>
-
-  //     {file && (
-  //       <p className="text-sm mt-2 text-gray-300">Selected file: {file.name}</p>
-  //     )}
-
-  //     <div className="mt-10">
-  //       <h2 className="text-xl font-bold mb-3">Available Files</h2>
-  //       {files.map((f, i) => (
-  //         <div key={i} className="border p-2 mb-2 rounded">
-  //           <div>
-  //             <span className="m-2">{f.name}</span>
-  //             <a
-  //               href={`/api/download?file=${f.path}`}
-  //               onClick={() => {
-  //                 setTimeout(() => {
-  //                   socket.emit("file-downloaded", f.path);
-  //                 }, 500);
-  //               }}
-  //               className="px-3 py-1 bg-green-500 text-white rounded"
-  //             >
-  //               Download
-  //             </a>
-  //           </div>
-  //           <input
-  //             className="mt-2 w-full border p-1 text-sm"
-  //             value={`${typeof window !== "undefined" ? window.location.origin : ""}/uploads/${f.path}`}
-  //             readOnly
-  //           />
-  //         </div>
-  //       ))}
-  //     </div>
-  //   </main>
-  // );
-
-  return(
-    <>
-    <Header isDark={isDark} onToggleTheme={() => setIsDark((d) => !d)}/>
-    <Footer/>
-    </>
+      <div className="w-full flex items-center justify-between py-4 border-b border-black/10 dark:border-white/10">
+        <div className="w-full">
+          <DropArea
+            state={uploadState}
+            file={activeFile}
+            progress={Math.min(100, Math.round(progress))}
+            elapsed={elapsed}
+            transferId={uploadedPath}
+            copied={copied}
+            onCopy={handleCopy}
+            onReset={handleReset}
+            onStartUpload={handleUploadFile}
+          />
+        </div>
+      </div>
+      <Footer />
+    </div>
   );
 }
