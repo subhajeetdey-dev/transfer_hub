@@ -17,7 +17,7 @@ export const randomId = (): string =>
 
 export const FEATURE_PILLS = [
     { icon: Lock, color: "#6366f1", label: "End-to-end encrypted", sub: "256-bit AES"},
-    { icon: Clock, color: "#3b82f6", label: "Links expired after you downloaded the file", sub: "Auto-delete after"},
+    { icon: Clock, color: "#3b82f6", label: "Links expire in 24h", sub: "Auto-delete after"},
     { icon: Globe, color: "#10b981", label: "Global CDN", sub:"Fast everywhere"}
 ];
 
