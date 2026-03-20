@@ -9,7 +9,7 @@ export default function HeroSection() {
           Send anything, <br />
           <em className="italic text-gold">instantly</em>
         </h1>
-        <p className="mt-6 font-serif font-light text-xl leading-relaxed text-ink-soft dark:text-paper/60">
+        <p className="mt-6 font-serif font-light text-sm md:text-xl leading-relaxed text-ink-soft dark:text-paper/60">
           Drop a file. Get a link. No accounts,<br />
           no friction — just transfer
         </p>
