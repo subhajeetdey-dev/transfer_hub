@@ -12,7 +12,7 @@ export default function UploadProgress({ file, progress, elapsed}: uploadProcess
 
     return(
         <div className="flex flex-col items-center gap-5 p-12 w-full">
-            <div className="font-serif font-light text-[22px] text-center text-ink dark:text-paper `max-w-[400px]` overflow-hidden text-ellipsis whitespace-nowrap">
+            <div className="font-serif font-light text-[22px] text-center text-ink dark:text-paper `max-w-[400px]` break-all px-4">
                 { file?.name }
             </div>
 
