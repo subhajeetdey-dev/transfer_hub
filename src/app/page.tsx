@@ -21,14 +21,15 @@ export default function Home() {
   const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done">(
     "idle",
   );
-  const [activeFile, setActiveFile] = useState<File | null>(null);
+  const [activeFiles, setActiveFiles] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [copied, setCopied] = useState(false);
   const [uploadedPath, setUploadedPath] = useState("");
 
   useEffect(() => {
     const root = document.documentElement;
-    if(isDark){
+    if (isDark) {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
@@ -73,11 +74,17 @@ export default function Home() {
     };
   }, []);
 
-  const handleUploadFile = async (selectedFile: File) => {
-    setActiveFile(selectedFile);
-    setUploadState("uploading");
-    setProgress(0);
-    setElapsed(0);
+  const handleUploadFile = async (selectedFiles: File[]) => {
+    setActiveFiles(selectedFiles);
+    setCurrentFileIndex(0);
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const selectedFile = selectedFiles[i];
+      setCurrentFileIndex(i);
+      setUploadState("uploading");
+      setProgress(0);
+      setElapsed(0);
+    
 
     let t = 0;
     const ticker = setInterval(() => {
@@ -107,12 +114,15 @@ export default function Home() {
       setUploadedPath(fileData.path);
       socket.emit("new-file", fileData);
 
-      setTimeout(() => setUploadState("done"), 300);
+      await new Promise((r) => setTimeout(r, 300));
     } catch (err) {
       clearInterval(ticker);
       console.error("Upload failed", err);
       setUploadState("idle");
+      return;
     }
+  }
+  setUploadState('done');
   };
 
   const handleCopy = () => {
@@ -124,7 +134,8 @@ export default function Home() {
 
   const handleReset = () => {
     setUploadState("idle");
-    setActiveFile(null);
+    setActiveFiles([]);
+    setCurrentFileIndex(0);
     setProgress(0);
     setElapsed(0);
     setCopied(false);
@@ -135,15 +146,13 @@ export default function Home() {
     <div className="grain ruled relative min-h-screen bg-paper dark:bg-ink flex flex-col items-center px-10 transition-colors duration-300">
       <Header isDark={isDark} onToggleTheme={() => setIsDark((d) => !d)} />
 
-      <div className="flex flex-col justify-between items-center">
-        <HeroSection />
-      </div>
-
+      <HeroSection/>
+      
       <div className="w-full flex items-center justify-between py-4 border-b border-black/10 dark:border-white/10">
         <div className="w-full">
           <DropArea
             state={uploadState}
-            file={activeFile}
+            file={activeFiles[currentFileIndex] ?? null}
             progress={Math.min(100, Math.round(progress))}
             elapsed={elapsed}
             transferId={uploadedPath}
@@ -151,6 +160,8 @@ export default function Home() {
             onCopy={handleCopy}
             onReset={handleReset}
             onStartUpload={handleUploadFile}
+            fileIndex = {currentFileIndex}
+            totalFiles = {activeFiles.length}
           />
         </div>
       </div>

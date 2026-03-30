@@ -2,7 +2,7 @@ import { FEATURE_PILLS } from "@/lib/utils";
 
 export default function HeroSection() {
   return (
-    <section className="w-full py-16 grid md:grid-cols-2 gap-112 items-start">
+    <section className="w-full py-16 grid md:grid-cols-[5fr_1fr] gap-12 items-center">
       {/* Left side */}
       <div className="flex flex-col">
         <h1 className="font-serif font-light leading-tight tracking-tight text-5xl lg:text-7xl text-ink dark:text-paper">
@@ -16,7 +16,7 @@ export default function HeroSection() {
       </div>
 
       {/* Right side */}
-      <div className="hidden md:flex flex-col gap-5 pt-3">
+      <div className="hidden md:flex flex-col gap-3 w-80">
         {FEATURE_PILLS.map(({ icon: Icon, color, label, sub }) => (
           <div
             key={label}

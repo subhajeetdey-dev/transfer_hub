@@ -15,7 +15,7 @@ export default function DropIdle({ onBrowseClick }: DropIdleProps) {
       </div>
 
       <div className="font-serif font-light text-[26px] tracking-[0.01em] text-center text-ink dark:text-paper">
-        Drop your file here
+        Drop your files here
       </div>
       
       {/* Divider */}

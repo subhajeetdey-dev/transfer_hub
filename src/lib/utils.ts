@@ -1,4 +1,4 @@
-import { Lock, Clock, Globe } from 'lucide-react';
+import { Lock, Clock, Globe, CloudUpload } from 'lucide-react';
 
 export const formatBytes = (bytes: number): string => {
     if(!bytes) return "0 B";
@@ -18,7 +18,8 @@ export const randomId = (): string =>
 export const FEATURE_PILLS = [
     { icon: Lock, color: "#6366f1", label: "End-to-end encrypted", sub: "256-bit AES"},
     { icon: Clock, color: "#3b82f6", label: "Links expire in 24h", sub: "Auto-delete after"},
-    { icon: Globe, color: "#10b981", label: "Global CDN", sub:"Fast everywhere"}
+    { icon: Globe, color: "#10b981", label: "Global CDN", sub:"Fast everywhere"},
+    { icon: CloudUpload, color: "#3B82F6", label: "Multiple File Upload", sub:"Upload Many Files at once"},
 ];
 
 

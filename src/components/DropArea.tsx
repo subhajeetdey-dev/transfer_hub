@@ -16,24 +16,26 @@ interface DropAreaProps{
     copied: boolean,
     onCopy: () => void,
     onReset: () => void,
-    onStartUpload: ( file: File ) => void;
+    onStartUpload: ( files: File[] ) => void;
+    fileIndex?: number;
+    totalFiles?: number;
 }
 
 
-export default function DropArea({ state, file, progress, elapsed, transferId, copied, onCopy, onReset, onStartUpload}: DropAreaProps){
+export default function DropArea({ state, file, progress, elapsed, transferId, copied, onCopy, onReset, onStartUpload, fileIndex, totalFiles}: DropAreaProps){
     const [ dragOver, setDragOver ] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setDragOver(false);
-        const f = e.dataTransfer.files[0];
-        if(f) onStartUpload(f);
+        const files = Array.from(e.dataTransfer.files);
+        if(files.length) onStartUpload(files);
     }, [onStartUpload]);
 
     const handleBrowse = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const f = e.target.files?.[0];
-        if(f) onStartUpload(f);
+        const files = Array.from(e.target.files || [])
+        if(files.length) onStartUpload(files);
     };
 
     return(
@@ -54,12 +56,13 @@ export default function DropArea({ state, file, progress, elapsed, transferId, c
                 <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 className="hidden"
                 onChange={handleBrowse}
                 />
 
             {state === "idle" && <DropIdle onBrowseClick={() => fileInputRef.current?.click()}/>}
-            {state === "uploading" && <UploadProgress file={file} progress={progress} elapsed={elapsed} />}
+            {state === "uploading" && <UploadProgress file={file} progress={progress} elapsed={elapsed} fileIndex={fileIndex} totalFiles={totalFiles}/>}
             {state === "done" && (
                 <UploadDone 
                 file={file}
